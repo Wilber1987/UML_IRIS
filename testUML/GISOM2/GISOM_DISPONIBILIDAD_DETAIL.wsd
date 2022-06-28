@@ -1,0 +1,47 @@
+
+@startuml evaluacion_politicas
+participant avsis
+participant pst
+participant gisom
+participant gisom_core
+pst -> avsis: proveedor(con sus politicas)
+avsis --> pst: retorna proveedor
+note left #aqua
+This is **list<Politics>**
+props **codigo, value**
+ej: **001, precio sobrepasado**
+end note
+alt pedir_disponibilidad(getTrainFareCombination)
+pst -> gisom:solicita disponibilidad - TrainImpl getTrainFareCombination()
+gisom -> gisom:GetTrainFareCombinationOperation -> execute()
+gisom -> gisom:TrainAvailRequestAdapter -> buildFromGetTrainFareCombinationRequest()
+gisom -> gisom:TrainAvailService -> searchAvail()
+gisom -> gisom:GetTrainFareCombinationReplyAdapter -> buildFromTrainAvailResponse()
+note left
+    7. forech disponibilidad
+    evaluar(){return true/false}
+    8. verificar que los datos queden guardados en la sesion
+end note
+loop N times
+    gisom -> gisom: evalua politica disponibilidad
+end
+gisom ->pst: retorna lista de disponibilidad evaluadas
+note left
+    GetTrainFareCombinationReply
+    This is **list<FareCombination>**
+    This is **disponibilidad { list<politicas> }** que incumple
+    end note
+end
+alt Guardo(GetTrainPurchaseRequest)
+    pst -> gisom:reserva TrainImpl -> getTrainFareCombination()
+    gisom -> gisom:GetTrainPurchaseOperation -> execute()
+    gisom -> gisom:TrainPurchaseRequestAdapter -> buildFromGetTrainPurchaseRequest()
+    gisom -> gisom:PoliticsValidationClass -> validatePoliticsInProposal()
+    gisom -> gisom:TrainPurchaseService -> purchase()
+    gisom -> gisom:GatewayOperationImpl -> execute()
+    gisom -> gisom:PurchaseGatewayOperationImpl -> doOperation()
+    gisom -> gisom:PurchaseGatewayOperationImpl -> onOperationOk()
+    gisom -> gisom:PurchaseGatewayOperationImpl -> storePurchase()
+    gisom -> gisom_core:StoreTrainSale -> store()
+end
+@enduml

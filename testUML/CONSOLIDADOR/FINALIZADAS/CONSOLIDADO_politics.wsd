@@ -1,0 +1,58 @@
+
+@startuml evaluacion_politicas
+participant avsis
+participant pst
+participant consolidador
+participant consolidador_core
+pst -> avsis: proveedor(con sus politicas)
+avsis --> pst: retorna proveedor
+note left
+    This is **list<Politics>**
+    props **codigo, value**
+    ej: **001, precio sobrepasado**
+end note
+alt pedir_disponibilidad(search/standard)
+    pst -> consolidador: solicita disponibilidad    
+    note left
+        This is **list<Politics>**
+        props **codigo, value** enum
+        ej: **001, precio sobrepasado**
+    end note
+    consolidador -> consolidador: guarda propuesta/politica del proveedor
+    loop N times
+        consolidador -> consolidador: evalua politica disponibilidad
+    end
+    note right
+        forech disponibilidad
+        evaluar(){return true/false}
+    end note    
+    consolidador ->pst: retorna lista de disponibilidad evaluadas
+    note right
+        This is **list<disponibilidad>**
+        This is **disponibilidad { list<politicas> }** que incumple
+    end note
+end
+alt startbooking(formulario/evento)
+    pst->consolidador: envia los datos de la reserva
+    consolidador->consolidador: valida si las politicas cambiaron
+    consolidador->consolidador: guarda en mongo reserva+politicas
+    consolidador->pst: permite el enbooking
+else si Cambiaron
+    consolidador -> consolidador: guarda propuesta/politica del proveedor
+    loop N times
+        consolidador -> consolidador: evalua politica disponibilidad
+    end
+    consolidador ->pst: retorna mensaje de politica no cumplida
+end
+alt EndBooking(formulario)
+    pst->consolidador: confirma la reserva
+    consolidador->consolidador_core: guarda la reserva y las politicas
+    note right
+        This is **Reserva**
+        props **list<politica>**
+        politica props (codigo, value)
+        si **list<politicas>** es > 0 reserva incumple
+    end note
+    consolidador->pst: reserva realizada
+end
+@enduml

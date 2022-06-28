@@ -1,0 +1,67 @@
+
+@startuml evaluacion_politicas
+participant avsis
+participant pst
+participant gisom
+participant gisom_core
+pst -> avsis: proveedor(con sus politicas)
+avsis --> pst: retorna proveedor
+note left #aqua
+    This is **list<Politics>**
+    props **codigo, value**
+    ej: **001, precio sobrepasado**
+end note
+alt pedir_disponibilidad(getTrainFareCombination)
+    pst -> gisom: solicita disponibilidad    
+    note left #aqua
+        1. Crear clase ComunityPolicies
+        2. Crear Enum de politicas
+        3. Modificar el objeto GetTrainFareCombinationRequest
+        4. Modificar FareCombination 
+            add: politicas **list<Politics>**
+    end note
+    gisom -> gisom: guarda propuesta/politica del proveedor
+    note left  #aqua      
+        5. crear class de validacion de politicas
+        6. modificar el metodo GetTrainFareCombinationReplyAdapter
+                buildFromTrainAvailResponse para validar politicas
+    end note
+    loop N times
+        gisom -> gisom: evalua politica disponibilidad
+    end
+    note right #aqua
+        7. forech disponibilidad
+           evaluar(){return true/false}
+        8. verificar que los datos queden guardados en la sesion 
+    end note    
+    gisom ->pst: retorna lista de disponibilidad evaluadas
+    note right 
+        GetTrainFareCombinationReply
+        This is **list<FareCombination>**
+        This is **disponibilidad { list<politicas> }** que incumple
+    end note
+end
+alt startbooking(formulario/evento)
+    pst->gisom: envia los datos de la reserva
+    gisom->gisom: valida si las politicas cambiaron
+    gisom->gisom: guarda en mongo reserva+politicas
+    gisom->pst: permite el enbooking
+else si Cambiaron
+    gisom -> gisom: guarda propuesta/politica del proveedor
+    loop N times
+        gisom -> gisom: evalua politica disponibilidad
+    end
+    gisom ->pst: retorna mensaje de politica no cumplida
+end
+alt EndBooking(formulario)
+    pst->gisom: confirma la reserva
+    gisom->gisom_core: guarda la reserva y las politicas
+    note right
+        This is **Reserva**
+        props **list<politica>**
+        politica props (codigo, value)
+        si **list<politicas>** es > 0 reserva incumple
+    end note
+    gisom->pst: reserva realizada
+end
+@enduml

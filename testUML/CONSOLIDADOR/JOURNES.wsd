@@ -1,0 +1,66 @@
+
+@startuml Modificacion de presentacion de vuelos **SPEEND -> 132 HOURS TOTAL**
+participant pst
+participant consolidador
+participant consolidador_core
+alt pedir_disponibilidad(search/standard)
+    pst -> consolidador: solicita disponibilidad (**"/standard"**)  
+    note left #aqua
+    Modificar modelo **JOURNEYS**
+        **SPEEND -> 8H** 
+        add  **list<Strings> SearchProposalsKey**
+        add  **BigInt MinimalPrice**
+        Modificar **SearchStandardReply**
+        add  **list<Journey> Journeys Ida**
+    end note
+    consolidador -> consolidador: createStandardSearchOperation.execute
+    note left #aqua
+    Crear Metodo de unificación de JOURNEYS
+        **SPEEND -> 40H** 
+        **List<Journey> MethodJOIN_JOURNEYS(List<SearchProposal>)**
+        1: obtener los  Journeys Ida y unificar los que se repiten
+        2: Agregar la lista de propuestas donde aparece este Journey
+        3: Seleccionar el valor mínimo de este Journey        
+    end note
+    consolidador -> consolidador: MethodJOIN_JOURNEYS()
+    note right #aqua
+        **SPEEND -> 8H**
+        guarda en mongoBD la lista de JOURNEYS
+    end note    
+    consolidador ->pst: retorna lista de los JOURNEYS IDA  **List<Journey>**
+    note left #FFAAAA
+        **SPEEND -> 20H**
+        Diseñar fragmento que  muestre 
+        las listas de JOURNEYS Ida
+    end note
+    pst ->consolidador: al seleccionar el Journey de ida ejecuta **API BUSQUEDA DE JOURNEYS**
+    note right #aqua
+        **SPEEND -> 25H**
+        Crear API de busqueda de SearchProposal 
+        por medio del Journey de ida seleccionado
+        **List<SearchProposal> APISearchProposalByJourney(Journey)**
+    end note  
+    consolidador ->pst: retorna lista de los JOURNEYS IDA  **List<Journey>** 
+    note left #FFAAAA
+        **SPEEND -> 15H**
+        Diseñar fragmento que 
+        muestre las listas de JOURNEYS de los posible de vuelta 
+        (SearchProposals en las que aparece el Journey)
+        una vez seleccionado se procederá a ingresar al quoteForm
+    end note
+
+    else filtrado en pantalla
+    pst -> consolidador: setStandardSearchFilterOperation.execute
+
+    consolidador -> consolidador: MethodJOIN_JOURNEYS()
+    note left #aqua
+        **SPEEND -> 16H**
+        Modficar modelo **SearchFilter**
+        Modificar **SearchFilter**
+        add **list<Journey> Journeys Ida**   
+        ejecutar **List<Journey> MethodJOIN_JOURNEYS(List<SearchProposal>)** 
+    end note
+
+    consolidador -> pst: retorna lista de los JOURNEYS IDA **List<Journey>** filtrados
+end
+@enduml
