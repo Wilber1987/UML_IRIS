@@ -1,0 +1,73 @@
+@startuml evaluacion_politicas
+participant avsis
+participant pst_web
+participant pst_core
+participant gisom
+pst_web -> pst_core: trainSearchManager -> updateSelectionTraveler(traveler)
+pst_web -> avsis: profilesBean.getCommunitie(comunidad_id)
+note right
+1- ejecutar api con el campo comunidad del traveler->travelerDTo/SimpleDtoTraveler
+->profilesService.communitieSearchByTokenId()
+avisis retorna dentro de communities el objeto 
+    "politicaTrenDto": {
+        "tokenId": "string",
+        "precioMaxNacional": 0,
+        "existeLimite": true
+    }
+2- crear un objeto comunidad para almacenar la respuesta de forma global
+ en el profilesBean creo el objeto private ComunidadDto comunidad;
+end note
+alt pedir_disponibilidad(getTrainFareCombination)
+  pst_web -> pst_core: trainSearchManager.search() - > standarSearch()
+    note right
+    1 - tomar los datos guardados de politicas y convertirlas en el 
+    tipo CommunityPolicies del objeto GetTrainFareCombinationRequest 
+    por medio del metodo SetCommunityPoliciesInRequest() global 
+    2 - el response trainService.search(request) debera traer una 
+    lista de politicas incumplidas por cada propuesta encontrada 
+    3- con el metodo  priceResponseBuilder.build se convierten las
+    propuestas al tipo searcproposal se agregan  List<String> unfulfilledPolicies;
+    y se setean apartir del el FareCombination
+    4- colocar menseja de alerta en la vista de propuestas
+    end note
+pst_web -> pst_web: dibujar mensaje en TrainPriceAvail
+    note right
+    <h:panelGroup style="margin-top: 10px; display:
+    block;" rendered="#{trainAvailBean.getUnfulfilledPolicies(proposal.unfulfilledPolicies) != null}">
+    <gi:message severity="warn">
+            <gi:row>#{trainAvailBean.getUnfulfilledPolicies(proposal.unfulfilledPolicies)}</gi:row>
+        </gi:message>
+    </h:panelGroup>
+    end note
+end
+alt Llenar el formulario de abordaje Quote
+pst_web -> pst_core: trainQuoteController.updateTravelerInfo(passenger)
+    note right
+        1- ejecutar api con el campo comunidad del traveler->travelerDTo/SimpleDtoTraveler
+        ->profilesService.communitieSearchByTokenId()
+        2- almacenar la respuesta  en el profilesBean creo el ComunidadDto comunidad;
+        3- Creo la instancia de la clase para ejecutar la validacion de politicas
+            ChangePoliticToValidate validatePolicies = new ChangePoliticToValidate();
+            colocarle los valores
+        4 - invocar el metodo api(crearlo) que retorna un objeto del tipo FareCombination
+            class TrainService 
+            add  public FareCombination changePolitic(ChangePoliticToValidate request) {
+                 return availabilitySearcher.changePolitic(request);
+            class availabilitySearcher 
+            add public FareCombination changePolitic(ChangePoliticToValidate request) {
+            add private FareCombination politicToValidate(   
+        5 - tomar del FareCombination la lista de las politicas incumplidas y mostrar el mensaje
+    end note
+end
+alt GardarReserva(GetTrainPurchaseRequest)
+    pst_web -> pst_core: trainQuoteManager.checkPrice() -> envia al trainbookingInfo.xhtml
+    pst_web -> pst_core: trainBookManager.book()->TrainConfirmBookManager.confirm()
+    note right
+       1- en el objeto GetTrainPurchaseRequest agregar la politica
+            if (trainProfilesBean.getComunidad() != null) {
+                purchaseRequest.setPoliticDto(searchManager.SetCommunityPoliciesInRequest());            
+            }
+    end note
+    pst_core -> gisom: envia la peticion de reserva con politicas
+end
+@enduml
