@@ -1,11 +1,11 @@
 
 @startuml evaluacion_politicas
-participant avsis
+participant perfiles
 participant pst
 participant consolidador
 participant consolidador_core
-pst -> avsis: proveedor(con sus politicas)
-avsis --> pst: retorna proveedor
+pst -> perfiles: proveedor(con sus politicas)
+perfiles --> pst: retorna proveedor
 note left
     This is **list<Politics>**
     props **codigo, value**

@@ -1,10 +1,10 @@
 @startuml evaluacion_politicas
-participant avsis
+participant perfiles
 participant pst_web
 participant pst_core
 participant gisom
 pst_web -> pst_core: trainSearchManager -> updateSelectionTraveler(traveler)
-pst_web -> avsis: profilesBean.getCommunitie(comunidad_id)
+pst_web -> perfiles: profilesBean.getCommunitie(comunidad_id)
 note right
 1- ejecutar api con el campo comunidad del traveler->travelerDTo/SimpleDtoTraveler
 ->profilesService.communitieSearchByTokenId()
