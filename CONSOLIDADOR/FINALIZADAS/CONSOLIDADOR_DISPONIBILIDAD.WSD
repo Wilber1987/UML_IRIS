@@ -58,8 +58,7 @@ alt cancelar_reserva(GetBookingReply)
 pst -> ws : BookMgmtRS.cancelBooking(String key)
 ws->ws: cancelBookingOperation.execute()
 ws->ws: cancelBookingOperation.executeComplex()
-ws <-> cc: GWDelegateImpl.cancel(CancelRequest10Type) - in postgres
-ws -> ws : getBookingByIdOperation.execute()
+ws <-> cc: GWDelegateImpl.cancel(CancelRequest10Type) 
 note left
 Tareas relacionadas: 
     getBookingByIdOperation.excute contruye el GetBookingReply que incluye una 
