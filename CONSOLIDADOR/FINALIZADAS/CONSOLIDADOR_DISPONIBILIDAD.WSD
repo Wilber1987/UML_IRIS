@@ -38,6 +38,11 @@ end
 ' ---------->
 alt recuperar_reserva(GetBookingReply)
 pst -> ws : BookMgmtRS.getBookingByLocator(String locator)
+note left
+    el locator se guarda en la tabla reserva, con el
+    id autorizacion se podria obtener la reserva especifica
+    y obtener el locator si fuse necesario.
+end note
 ws->ws: getBookingByLocatorCommand.execute()
 ws->ws: getBookingByLocatorCommand.getReserva()
 ws <-> cc: reservaSessionLocal.findLastByLocalizador(SearchId) - in postgres
