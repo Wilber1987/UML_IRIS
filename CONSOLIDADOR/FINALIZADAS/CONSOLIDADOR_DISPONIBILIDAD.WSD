@@ -1,0 +1,75 @@
+@startuml evaluacion_politicas
+participant pst
+box "Consolidador" #LightBlue
+participant consolidador_ws as ws
+participant consolidador_gateway as gw
+participant consolidador_core as cc
+end box
+participant providers as pv
+participant rabbitMq as rm
+' ---------->
+alt pedir_disponibilidad(CreateSearchReply)
+pst -> ws : AirSearchRS.standard()
+note left
+    CreateSearchReply
+end note
+ws->ws: CreateStandardSearchOperation.execute()
+ws -> gw : GWDelegateImpl.fullAvail()
+gw <-> pv : BookingRequest
+gw -> ws: FullAvailResponse10Type (Disponibilidad)
+ws -> ws: saveSearch() - in mongoBD
+note left
+Tareas relacionadas: 
+    Evaluar politicas por cada SearchPropousals 
+    en el FullAvailResponse10Type usando el 
+    PoliticsValidationClass y las CommunityPolicies
+    detalles en CONSOLIDADO_politics.wsd
+end note
+ws -> pst : CreateSearchReply (SearchId)
+end
+' ---------->
+alt recuperar_disponibilidad(SearchStandardReply)
+pst -> ws : AirSearchRS.getSearchStandard()
+ws->ws: GetStandardSearchOperation.execute()
+ws -> ws: searchDataRepository(SearchId) - in mongoBD
+ws -> pst : SearchStandardReply (SearchPropusal List)
+end
+
+' ---------->
+alt recuperar_reserva(GetBookingReply)
+pst -> ws : BookMgmtRS.getBookingByLocator(String locator)
+ws->ws: getBookingByLocatorCommand.execute()
+ws->ws: getBookingByLocatorCommand.getReserva()
+ws <-> cc: reservaSessionLocal.findLastByLocalizador(SearchId) - in postgres
+ws -> ws : getBookingByIdOperation.execute()
+note left
+Tareas relacionadas: 
+    getBookingByIdOperation.excute contruye el GetBookingReply que incluye una 
+    instancia de Booking que contiene los datos de la reserva
+    y el booking key que luego es usado para cancelar 
+    setIn: linea 55 de AereoBookingRetrieveManager de pst metodo 
+    searchFromCompany() 
+    Cancel: AereoBookingRetrieveDetailBean de pst  linea 75
+    metodo  cancelBooking()
+end note
+end
+' ---------->
+alt cancelar_reserva(GetBookingReply)
+pst -> ws : BookMgmtRS.cancelBooking(String key)
+ws->ws: cancelBookingOperation.execute()
+ws->ws: cancelBookingOperation.executeComplex()
+ws <-> cc: GWDelegateImpl.cancel(CancelRequest10Type) - in postgres
+ws -> ws : getBookingByIdOperation.execute()
+note left
+Tareas relacionadas: 
+    getBookingByIdOperation.excute contruye el GetBookingReply que incluye una 
+    instancia de Booking que contiene los datos de la reserva
+    y el booking key que luego es usado para cancelar 
+    setIn: linea 55 de AereoBookingRetrieveManager de pst metodo 
+    searchFromCompany() 
+    Cancel: AereoBookingRetrieveDetailBean de pst  linea 75
+    metodo  cancelBooking()
+end note
+end
+activate rm
+deactivate rm
