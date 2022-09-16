@@ -61,13 +61,11 @@ ws->ws: cancelBookingOperation.executeComplex()
 ws <-> cc: GWDelegateImpl.cancel(CancelRequest10Type) 
 note left
 Tareas relacionadas: 
-    getBookingByIdOperation.excute contruye el GetBookingReply que incluye una 
-    instancia de Booking que contiene los datos de la reserva
-    y el booking key que luego es usado para cancelar 
-    setIn: linea 55 de AereoBookingRetrieveManager de pst metodo 
-    searchFromCompany() 
-    Cancel: AereoBookingRetrieveDetailBean de pst  linea 75
-    metodo  cancelBooking()
+    cancelBookingOperation.excute recibe un id y construye 
+    todo lo necsario para hacer la cancelacion, se debe de
+    recuperar ese id de la tabla usando de alguna manera el
+    servicio de busqueda y luego con ese dato poder ejcutar 
+    el proceso de cancelacion. 
 end note
 end
 activate rm
